@@ -212,6 +212,29 @@ th {
   min-width: 180px;
 }
 
+.transition-field {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.field-hint,
+.field-error {
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+
+.field-hint {
+  color: var(--muted);
+}
+
+.field-error {
+  color: #ffb4b4;
+}
+
+.transition input[aria-invalid="true"] {
+  border-color: #c45c5c;
+}
+
 @media (max-width: 960px) {
   .layout {
     grid-template-columns: 1fr;
