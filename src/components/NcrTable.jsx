@@ -54,6 +54,11 @@ export default function NcrTable({
                 containmentAction: "",
                 note: "",
               };
+              const needsContainmentAction =
+                draft.status === "CONTAINED" &&
+                !draft.containmentAction.trim() &&
+                !ncr.containmentAction?.trim();
+              const containmentHelpId = `containment-help-${ncr.id}`;
               return (
                 <tr key={ncr.id}>
                   <td className="mono">{ncr.ncrNumber}</td>
@@ -88,17 +93,33 @@ export default function NcrTable({
                           ))}
                         </select>
                         {draft.status === "CONTAINED" ? (
-                          <input
-                            placeholder="Containment action (required)"
-                            value={draft.containmentAction}
-                            disabled={busy}
-                            onChange={(e) =>
-                              onDraftChange(ncr.id, {
-                                ...draft,
-                                containmentAction: e.target.value,
-                              })
-                            }
-                          />
+                          <div className="transition-field">
+                            <input
+                              aria-label={`Containment action for ${ncr.ncrNumber}`}
+                              aria-describedby={containmentHelpId}
+                              aria-invalid={needsContainmentAction}
+                              placeholder="Containment action"
+                              value={draft.containmentAction}
+                              disabled={busy}
+                              required={!ncr.containmentAction?.trim()}
+                              onChange={(e) =>
+                                onDraftChange(ncr.id, {
+                                  ...draft,
+                                  containmentAction: e.target.value,
+                                })
+                              }
+                            />
+                            <span
+                              id={containmentHelpId}
+                              className={needsContainmentAction ? "field-error" : "field-hint"}
+                            >
+                              {needsContainmentAction
+                                ? "Containment action is required to move to CONTAINED."
+                                : ncr.containmentAction?.trim() && !draft.containmentAction.trim()
+                                  ? "The existing containment action will be reused."
+                                  : "Containment action provided."}
+                            </span>
+                          </div>
                         ) : null}
                         <input
                           placeholder="Note (optional)"
@@ -111,7 +132,7 @@ export default function NcrTable({
                         <button
                           type="button"
                           className="btn subtle"
-                          disabled={busy}
+                          disabled={busy || needsContainmentAction}
                           onClick={() => onTransition(ncr, draft)}
                         >
                           Apply
