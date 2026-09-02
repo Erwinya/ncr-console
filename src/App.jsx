@@ -138,6 +138,8 @@ export default function App() {
           statusDrafts={statusDrafts}
           onDraftChange={onDraftChange}
           onTransition={onTransition}
+          filter={filter}
+          apiError={Boolean(error)}
         />
       </main>
     </div>

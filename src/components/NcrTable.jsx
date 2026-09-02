@@ -15,12 +15,20 @@ export default function NcrTable({
   statusDrafts,
   onDraftChange,
   onTransition,
+  filter,
+  apiError,
 }) {
   if (!ncrs.length) {
+    let message = "No NCRs yet. Create one on the left.";
+    if (apiError) {
+      message = "Could not load NCRs. Start qms-ncr-service on :8082 and click Refresh.";
+    } else if (filter) {
+      message = `No NCRs with status ${filter}. Try another filter or create a new record.`;
+    }
     return (
       <div className="panel empty">
         <h2>NCR queue</h2>
-        <p className="muted">No NCRs yet. Create one on the left.</p>
+        <p className="muted">{message}</p>
       </div>
     );
   }
