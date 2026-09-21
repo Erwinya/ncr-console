@@ -26,6 +26,13 @@ npm install
 cp .env.example .env
 ```
 
+Windows PowerShell:
+
+```powershell
+npm install
+Copy-Item .env.example .env
+```
+
 ## Run
 
 Terminal 1 — API:
@@ -35,9 +42,18 @@ Terminal 1 — API:
 ./mvnw spring-boot:run
 ```
 
+```powershell
+# in qms-ncr-service
+.\mvnw.cmd spring-boot:run
+```
+
 Terminal 2 — console:
 
 ```bash
+npm run dev
+```
+
+```powershell
 npm run dev
 ```
 
@@ -50,9 +66,18 @@ npm run build
 npm run preview
 ```
 
+```powershell
+npm run build
+npm run preview
+```
+
 ## Tests
 
 ```bash
+npm test
+```
+
+```powershell
 npm test
 ```
 
