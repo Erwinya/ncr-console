@@ -73,6 +73,8 @@ npm run preview
 
 ## Tests
 
+GitHub Actions runs `npm test` and `npm run build` on push.
+
 ```bash
 npm test
 ```
