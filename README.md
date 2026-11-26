@@ -71,6 +71,10 @@ npm run build
 npm run preview
 ```
 
+## Quality
+
+List requests cancel superseded filter loads. Status/error feedback uses a live region.
+
 ## Tests
 
 GitHub Actions runs `npm test` and `npm run build` on push.
