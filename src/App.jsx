@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createNcr, listNcrs, updateNcrStatus } from "./api/ncrs.js";
 import NcrCreateForm, { emptyCreateForm } from "./components/NcrCreateForm.jsx";
 import NcrTable from "./components/NcrTable.jsx";
@@ -9,27 +9,44 @@ export default function App() {
   const [form, setForm] = useState(emptyCreateForm);
   const [statusDrafts, setStatusDrafts] = useState({});
   const [filter, setFilter] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [listBusy, setListBusy] = useState(false);
+  const [mutateBusy, setMutateBusy] = useState(false);
   const [status, setStatus] = useState("Loading NCRs…");
   const [error, setError] = useState("");
+  const requestId = useRef(0);
+  const abortRef = useRef(null);
 
   const refresh = useCallback(async () => {
-    setBusy(true);
+    if (abortRef.current) {
+      abortRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortRef.current = controller;
+    const id = ++requestId.current;
+    setListBusy(true);
     setError("");
     try {
-      const data = await listNcrs(filter || undefined);
+      const data = await listNcrs(filter || undefined, { signal: controller.signal });
+      if (id !== requestId.current) return;
       setNcrs(Array.isArray(data) ? data : []);
       setStatus(`Loaded ${Array.isArray(data) ? data.length : 0} NCR(s)`);
     } catch (err) {
+      if (err?.name === "AbortError") return;
+      if (id !== requestId.current) return;
       setError(err.message || String(err));
       setStatus("API unavailable — start qms-ncr-service on :8082");
     } finally {
-      setBusy(false);
+      if (id === requestId.current) {
+        setListBusy(false);
+      }
     }
   }, [filter]);
 
   useEffect(() => {
     refresh();
+    return () => {
+      if (abortRef.current) abortRef.current.abort();
+    };
   }, [refresh]);
 
   function onChange(event) {
@@ -39,7 +56,7 @@ export default function App() {
 
   async function onCreate(event) {
     event.preventDefault();
-    setBusy(true);
+    setMutateBusy(true);
     setError("");
     try {
       const created = await createNcr({
@@ -55,7 +72,8 @@ export default function App() {
       await refresh();
     } catch (err) {
       setError(err.message || String(err));
-      setBusy(false);
+    } finally {
+      setMutateBusy(false);
     }
   }
 
@@ -69,7 +87,7 @@ export default function App() {
       setError("containmentAction is required when moving to CONTAINED");
       return;
     }
-    setBusy(true);
+    setMutateBusy(true);
     setError("");
     try {
       const payload = {
@@ -89,9 +107,12 @@ export default function App() {
       await refresh();
     } catch (err) {
       setError(err.message || String(err));
-      setBusy(false);
+    } finally {
+      setMutateBusy(false);
     }
   }
+
+  const busy = listBusy || mutateBusy;
 
   return (
     <div className="page">
@@ -109,7 +130,7 @@ export default function App() {
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            disabled={busy}
+            disabled={listBusy}
             aria-label="Filter by status"
           >
             <option value="">All statuses</option>
@@ -119,22 +140,24 @@ export default function App() {
             <option value="CLOSED">CLOSED</option>
             <option value="CANCELLED">CANCELLED</option>
           </select>
-          <button type="button" className="btn subtle" onClick={refresh} disabled={busy}>
+          <button type="button" className="btn subtle" onClick={refresh} disabled={listBusy}>
             Refresh
           </button>
         </div>
       </header>
 
-      <div className="status-row">
+      <div className="status-row" aria-live="polite">
         <span className="mono muted">{status}</span>
-        {error ? <span className="error">{error}</span> : null}
+        {error ? <span className="error" role="alert">{error}</span> : null}
       </div>
 
       <main className="layout">
-        <NcrCreateForm form={form} onChange={onChange} onSubmit={onCreate} busy={busy} />
+        <NcrCreateForm form={form} onChange={onChange} onSubmit={onCreate} busy={mutateBusy} />
         <NcrTable
           ncrs={ncrs}
           busy={busy}
+          listBusy={listBusy}
+          mutateBusy={mutateBusy}
           statusDrafts={statusDrafts}
           onDraftChange={onDraftChange}
           onTransition={onTransition}
