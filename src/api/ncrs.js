@@ -1,42 +1,47 @@
 const API_BASE = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
 
 async function request(path, options = {}) {
+  const { headers: extraHeaders, body, signal, ...rest } = options;
+  const headers = { ...(extraHeaders || {}) };
+  if (body !== undefined && body !== null) {
+    headers["Content-Type"] = "application/json";
+  }
+
   const response = await fetch(`${API_BASE}${path}`, {
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers || {}),
-    },
-    ...options,
+    ...rest,
+    headers,
+    body,
+    signal,
   });
 
   const text = await response.text();
-  let body = null;
+  let parsed = null;
   if (text) {
     try {
-      body = JSON.parse(text);
+      parsed = JSON.parse(text);
     } catch {
-      body = text;
+      parsed = text;
     }
   }
 
   if (!response.ok) {
     const message =
-      (body && typeof body === "object" && (body.message || body.statusMessage || body.data)) ||
-      (typeof body === "string" && body) ||
+      (parsed && typeof parsed === "object" && (parsed.message || parsed.statusMessage || parsed.data)) ||
+      (typeof parsed === "string" && parsed) ||
       `Request failed (${response.status})`;
     throw new Error(typeof message === "string" ? message : JSON.stringify(message));
   }
 
   // qms-ncr-service wraps payloads as { data, statusCode, statusMessage }
-  if (body && typeof body === "object" && "data" in body) {
-    return body.data;
+  if (parsed && typeof parsed === "object" && "data" in parsed) {
+    return parsed.data;
   }
-  return body;
+  return parsed;
 }
 
-export function listNcrs(status) {
+export function listNcrs(status, options = {}) {
   const query = status ? `?status=${encodeURIComponent(status)}` : "";
-  return request(`/api/v1/ncrs${query}`);
+  return request(`/api/v1/ncrs${query}`, { signal: options.signal });
 }
 
 export function createNcr(payload) {
@@ -47,7 +52,7 @@ export function createNcr(payload) {
 }
 
 export function updateNcrStatus(id, payload) {
-  return request(`/api/v1/ncrs/${id}/status`, {
+  return request(`/api/v1/ncrs/${encodeURIComponent(id)}/status`, {
     method: "PUT",
     body: JSON.stringify(payload),
   });
