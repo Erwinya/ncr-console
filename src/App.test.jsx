@@ -48,7 +48,7 @@ describe("App", () => {
     render(<App />);
 
     const action = await screen.findByLabelText("Containment action for NCR-007");
-    const apply = screen.getByRole("button", { name: "Apply" });
+    const apply = screen.getByRole("button", { name: /Apply transition for/i });
     expect(action).toBeRequired();
     expect(action).toHaveAttribute("aria-invalid", "true");
     expect(screen.getByText("Containment action is required to move to CONTAINED.")).toBeInTheDocument();
@@ -78,7 +78,7 @@ describe("App", () => {
 
     await screen.findByLabelText("Containment action for NCR-007");
     expect(screen.getByText("The existing containment action will be reused.")).toBeInTheDocument();
-    const apply = screen.getByRole("button", { name: "Apply" });
+    const apply = screen.getByRole("button", { name: /Apply transition for/i });
     expect(apply).toBeEnabled();
     fireEvent.click(apply);
 

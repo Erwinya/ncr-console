@@ -43,15 +43,16 @@ export default function NcrTable({
       </div>
       <div className="table-wrap">
         <table>
+          <caption className="visually-hidden">Nonconformance reports and status transitions</caption>
           <thead>
             <tr>
-              <th>NCR</th>
-              <th>Title</th>
-              <th>Severity</th>
-              <th>Status</th>
-              <th>Lot</th>
-              <th>Updated</th>
-              <th>Transition</th>
+              <th scope="col">NCR</th>
+              <th scope="col">Title</th>
+              <th scope="col">Severity</th>
+              <th scope="col">Status</th>
+              <th scope="col">Lot</th>
+              <th scope="col">Updated</th>
+              <th scope="col">Transition</th>
             </tr>
           </thead>
           <tbody>
@@ -88,6 +89,7 @@ export default function NcrTable({
                     ) : (
                       <div className="transition">
                         <select
+                          aria-label={`Next status for ${ncr.ncrNumber}`}
                           value={draft.status}
                           disabled={busy}
                           onChange={(e) =>
@@ -130,6 +132,7 @@ export default function NcrTable({
                           </div>
                         ) : null}
                         <input
+                          aria-label={`Transition note for ${ncr.ncrNumber}`}
                           placeholder="Note (optional)"
                           value={draft.note}
                           disabled={busy}
@@ -140,6 +143,7 @@ export default function NcrTable({
                         <button
                           type="button"
                           className="btn subtle"
+                          aria-label={`Apply transition for ${ncr.ncrNumber}`}
                           disabled={busy || needsContainmentAction}
                           onClick={() => onTransition(ncr, draft)}
                         >
